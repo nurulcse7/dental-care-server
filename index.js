@@ -13,7 +13,7 @@ app.use(express.json());
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.70yiu6o.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1,});
 
-// JWT middleware 75-5 
+// JWT verification middleware 75-5 
 function verifyJWT(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader) {
@@ -35,6 +35,20 @@ async function run() {
     const bookingsCollection = client.db('dentalCare').collection('bookings');
     const usersCollection = client.db('dentalCare').collection('users');
     const doctorsCollection = client.db('dentalCare').collection('doctors');
+
+    // N.B: make sure you use verifyAdmin after verifyJWT 
+    // That means Firstly verifyJWT, Secondly verifyAdmin. 
+    // Admin verification middleware 76-8
+    const verifyAdmin = async (req, res, next) => {
+      const decodedEmail = req.decoded.email;
+      const query = { email: decodedEmail };
+      const user = await usersCollection.findOne(query);
+
+      if (user?.role !== 'admin') {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      next();
+    };
 
     // get the all appointmentOptions from mongodb(appointmentOptions) 74-2
     app.get('/appointmentOptions', async (req, res) => {
@@ -177,13 +191,13 @@ app.get('/users/admin/:email', async (req, res) => {
 })
 
 // user update // make admin // admin verifyJWT, 75-8
-app.put('/users/admin/:id', verifyJWT,  async (req, res) => {
-    const decodedEmail = req.decoded.email;
-    const query = { email: decodedEmail };
-    const user = await usersCollection.findOne(query);
-    if (user?.role !== 'admin') {
-        return res.status(403).send({ message: 'forbidden access' })
-    }
+app.put('/users/admin/:id', verifyJWT, verifyAdmin, async (req, res) => {
+    // const decodedEmail = req.decoded.email;
+    // const query = { email: decodedEmail };
+    // const user = await usersCollection.findOne(query);
+    // if (user?.role !== 'admin') {
+    //     return res.status(403).send({ message: 'forbidden access' })
+    // }
     const id = req.params.id;
     const filter = { _id: ObjectId(id) }
     const options = { upsert: true };
@@ -204,21 +218,21 @@ app.get('/appointmentSpecialty', async (req, res) => {
   res.send(result);
 });
 
-// add a doctor to mongodb 76-5  verifyJWT, verifyAdmin,
-app.post('/doctors',  async (req, res) => {
+// add a doctor to mongodb 76-5   
+app.post('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
   const doctor = req.body;
   const result = await doctorsCollection.insertOne(doctor);
   res.send(result);
 });
-// show doctor to UI from mongo 76-5 verifyJWT, verifyAdmin,
-app.get('/doctors',  async (req, res) => {
+// show doctor to UI from mongo 76-5  
+app.get('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
   const query = {};
   const doctors = await doctorsCollection.find(query).toArray();
   res.send(doctors);
 });
 
-// delete a doctor from UI 76-8 verifyJWT, verifyAdmin,
-app.delete('/doctors/:id',  async (req, res) => {
+// delete a doctor from UI and mongo 76-8  
+app.delete('/doctors/:id', verifyJWT, verifyAdmin, async (req, res) => {
   const id = req.params.id;
   const filter = { _id: ObjectId(id) };
   const result = await doctorsCollection.deleteOne(filter);
