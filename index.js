@@ -34,7 +34,7 @@ async function run() {
     const appointmentOptionCollection = client.db('dentalCare').collection('appointmentOptions');
     const bookingsCollection = client.db('dentalCare').collection('bookings');
     const usersCollection = client.db('dentalCare').collection('users');
-    const doctorsCollection = client.db('doctorsPortal').collection('doctors');
+    const doctorsCollection = client.db('dentalCare').collection('doctors');
 
     // get the all appointmentOptions from mongodb(appointmentOptions) 74-2
     app.get('/appointmentOptions', async (req, res) => {
@@ -210,20 +210,20 @@ app.post('/doctors',  async (req, res) => {
   const result = await doctorsCollection.insertOne(doctor);
   res.send(result);
 });
-// // show doctor to UI
-// app.get('/doctors', verifyJWT, verifyAdmin, async (req, res) => {
-//   const query = {};
-//   const doctors = await doctorsCollection.find(query).toArray();
-//   res.send(doctors);
-// });
+// show doctor to UI from mongo 76-5 verifyJWT, verifyAdmin,
+app.get('/doctors',  async (req, res) => {
+  const query = {};
+  const doctors = await doctorsCollection.find(query).toArray();
+  res.send(doctors);
+});
 
-// // delete a doctor from UI
-// app.delete('/doctors/:id', verifyJWT, verifyAdmin, async (req, res) => {
-//   const id = req.params.id;
-//   const filter = { _id: ObjectId(id) };
-//   const result = await doctorsCollection.deleteOne(filter);
-//   res.send(result);
-// });
+// delete a doctor from UI 76-8 verifyJWT, verifyAdmin,
+app.delete('/doctors/:id',  async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: ObjectId(id) };
+  const result = await doctorsCollection.deleteOne(filter);
+  res.send(result);
+});
 
 // =================Add A Doctor stop here ========================//
 
