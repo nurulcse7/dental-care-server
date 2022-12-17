@@ -265,6 +265,15 @@ async function run() {
     //-----------------------------------------------------------------
 
     // ================= Payment start here ========================//
+
+    // // delete a booking from UI and mongo
+    // app.get('/bookings/:id', async (req, res) => {
+    //   const id = req.params.id;
+    //   const filter = { _id: ObjectId(id) };
+    //   const booking = await bookingsCollection.deleteOne(filter);
+    //   res.send(booking);
+    // });
+
     // (temporary to update ) insert price field on appointmentOptions on mongo
     // app.get('/addPrice', async (req, res) => {
     //   const filter = {};
@@ -277,7 +286,15 @@ async function run() {
     //   const result = await appointmentOptionCollection.updateMany( filter, updatedDoc, options);
     //   res.send(result);
     // });
+    // get booking id from bookings/mongo for payment
+    app.get('/bookings/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const booking = await bookingsCollection.findOne(query);
+      res.send(booking);
+    });
 
+    
 
     // ================= Payment stop here ========================//
   } finally {
