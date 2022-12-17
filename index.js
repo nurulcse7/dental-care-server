@@ -3,6 +3,7 @@ const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const port = process.env.PORT || 5000;
 const app = express();
 
@@ -41,6 +42,7 @@ async function run() {
     const bookingsCollection = client.db('dentalCare').collection('bookings');
     const usersCollection = client.db('dentalCare').collection('users');
     const doctorsCollection = client.db('dentalCare').collection('doctors');
+    const paymentsCollection = client.db('dentalCare').collection('payments');
 
     // N.B: make sure you use verifyAdmin after verifyJWT
     // That means Firstly verifyJWT, Secondly verifyAdmin.
@@ -265,7 +267,6 @@ async function run() {
     //-----------------------------------------------------------------
 
     // ================= Payment start here ========================//
-
     // // delete a booking from UI and mongo
     // app.get('/bookings/:id', async (req, res) => {
     //   const id = req.params.id;
@@ -286,7 +287,7 @@ async function run() {
     //   const result = await appointmentOptionCollection.updateMany( filter, updatedDoc, options);
     //   res.send(result);
     // });
-    // get booking id from bookings/mongo for payment
+    // get booking id from bookings/mongo for payment 77-
     app.get('/bookings/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
@@ -294,7 +295,39 @@ async function run() {
       res.send(booking);
     });
 
-    
+    // before payment 77-6
+    app.post('/create-payment-intent', async (req, res) => {
+      const booking = req.body;
+      const price = booking.price;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        currency: 'usd',
+        amount: amount,
+        payment_method_types: ['card'],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+//  after payment, save payment info in mongo 77-9
+    app.post('/payments', async (req, res) => {
+      const payment = req.body;
+      const result = await paymentsCollection.insertOne(payment);
+      const id = payment.bookingId;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId,
+        },
+      };
+      const updatedResult = await bookingsCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(result);
+    });
+
 
     // ================= Payment stop here ========================//
   } finally {
