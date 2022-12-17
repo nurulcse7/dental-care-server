@@ -195,6 +195,15 @@ app.put('/users/admin/:id', verifyJWT,  async (req, res) => {
     res.send(result);
 })
 
+// =================Add A Doctor start here ========================//
+// get specialty data from mongodb(database) 76-2
+app.get('/appointmentSpecialty', async (req, res) => {
+  const query = {};
+  const result = await appointmentOptionCollection.find(query).project({ name: 1 }).toArray();
+  res.send(result);
+});
+// =================Add A Doctor stop here ========================//
+
   } finally {
   }
 }
