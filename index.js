@@ -1,12 +1,15 @@
 const express = require('express');
 const cors = require('cors');
+require('dotenv').config();
+
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
-require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const nodemailer = require('nodemailer');
+const mg = require('nodemailer-mailgun-transport');
+
 const port = process.env.PORT || 5000;
 const app = express();
-
 // middleware
 app.use(cors());
 app.use(express.json());
@@ -17,6 +20,52 @@ const client = new MongoClient(uri, {
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
+
+// Email sending function 78-2
+function sendBookingEmail(booking) {
+const { email, treatment, appointmentDate, slot } = booking;
+
+const auth = {
+  auth: {
+    api_key: '41134aebfa9469428f20317079c5abc1-f2340574-0f607049',
+    domain: 'sandbox72fd8e2d1b7a489f929932460083de80.mailgun.org',
+  },
+};
+const transporter = nodemailer.createTransport(mg(auth));
+
+// send grid transporter
+// let transporter = nodemailer.createTransport({
+//     host: 'smtp.sendgrid.net',
+//     port: 587,
+//     auth: {
+//         user: "apikey",
+//         pass: process.env.SENDGRID_API_KEY
+//     }
+// });
+console.log('sending email', email);
+transporter.sendMail(
+  {
+    from: 'nurul.cse7@gmail.com', // verified sender email
+    to: email || 'ph03b6@gmail.com', // recipient email
+    subject: `Your appointment for ${treatment} is confirmed`, // Subject line
+    text: 'Hello world!', // plain text body
+    html: `
+        <h3>Your appointment is confirmed</h3>
+        <div>
+            <p>Your appointment for treatment: ${treatment}</p>
+            <p>Please visit us on ${appointmentDate} at ${slot}</p>
+            <p>Thanks from Dental Care</p>
+        </div> `, // html body
+  },
+  function (error, info) {
+    if (error) {
+      console.log('Email send error', error);
+    } else {
+      console.log('Email sent: ' + info);
+    }
+  }
+);
+}
 
 // JWT verification middleware 75-5
 function verifyJWT(req, res, next) {
@@ -155,6 +204,8 @@ async function run() {
         return res.send({ acknowledged: false, message });
       }
       const result = await bookingsCollection.insertOne(booking);
+      // send email about appointment confirmation 78-2
+      sendBookingEmail(booking);
       res.send(result);
     });
 
@@ -263,10 +314,10 @@ async function run() {
       const result = await doctorsCollection.deleteOne(filter);
       res.send(result);
     });
-    // =================Add A Doctor stop here ========================//
-    //-----------------------------------------------------------------
+    // =================Add A Doctor stop here ========================
 
-    // ================= Payment start here ========================//
+    // ================= Payment start here ========================
+
     // // delete a booking from UI and mongo
     // app.get('/bookings/:id', async (req, res) => {
     //   const id = req.params.id;
@@ -309,7 +360,7 @@ async function run() {
         clientSecret: paymentIntent.client_secret,
       });
     });
-//  after payment, save payment info in mongo 77-9
+    //  after payment, save payment info in mongo 77-9
     app.post('/payments', async (req, res) => {
       const payment = req.body;
       const result = await paymentsCollection.insertOne(payment);
@@ -327,7 +378,6 @@ async function run() {
       );
       res.send(result);
     });
-
 
     // ================= Payment stop here ========================//
   } finally {
