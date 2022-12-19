@@ -27,8 +27,8 @@ const { email, treatment, appointmentDate, slot } = booking;
 
 const auth = {
   auth: {
-    api_key: '41134aebfa9469428f20317079c5abc1-f2340574-0f607049',
-    domain: 'sandbox72fd8e2d1b7a489f929932460083de80.mailgun.org',
+    api_key: process.env.MAILGUN_PRIVATE_API_KEY,
+    domain: process.env.MAILGUN_DOMAIN,
   },
 };
 const transporter = nodemailer.createTransport(mg(auth));
@@ -54,7 +54,8 @@ transporter.sendMail(
         <div>
             <p>Your appointment for treatment: ${treatment}</p>
             <p>Please visit us on ${appointmentDate} at ${slot}</p>
-            <p>Thanks from Dental Care</p>
+            <p>Thanks</p>
+            <a href='https://dental-care-com.web.app'>Visit our website</a>
         </div> `, // html body
   },
   function (error, info) {
