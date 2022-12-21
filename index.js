@@ -389,5 +389,4 @@ run().catch(console.log);
 app.get('/', async (req, res) => {
   res.send('dental care server is running');
 });
-
 app.listen(port, () => console.log(`Dental care running on ${port}`));
