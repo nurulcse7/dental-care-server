@@ -23,33 +23,33 @@ const client = new MongoClient(uri, {
 
 // Email sending function 78-2
 function sendBookingEmail(booking) {
-const { email, treatment, appointmentDate, slot } = booking;
+  const { email, treatment, appointmentDate, slot } = booking;
 
-const auth = {
-  auth: {
-    api_key: process.env.MAILGUN_PRIVATE_API_KEY,
-    domain: process.env.MAILGUN_DOMAIN,
-  },
-};
-const transporter = nodemailer.createTransport(mg(auth));
+  const auth = {
+    auth: {
+      api_key: process.env.MAILGUN_PRIVATE_API_KEY,
+      domain: process.env.MAILGUN_DOMAIN,
+    },
+  };
+  const transporter = nodemailer.createTransport(mg(auth));
 
-// send grid transporter
-// let transporter = nodemailer.createTransport({
-//     host: 'smtp.sendgrid.net',
-//     port: 587,
-//     auth: {
-//         user: "apikey",
-//         pass: process.env.SENDGRID_API_KEY
-//     }
-// });
-console.log('sending email', email);
-transporter.sendMail(
-  {
-    from: 'nurul.cse7@gmail.com', // verified sender email
-    to: email || 'ph03b6@gmail.com', // recipient email
-    subject: `Your appointment for ${treatment} is confirmed`, // Subject line
-    text: 'Hello world!', // plain text body
-    html: `
+  // send grid transporter
+  // let transporter = nodemailer.createTransport({
+  //     host: 'smtp.sendgrid.net',
+  //     port: 587,
+  //     auth: {
+  //         user: "apikey",
+  //         pass: process.env.SENDGRID_API_KEY
+  //     }
+  // });
+  console.log('sending email', email);
+  transporter.sendMail(
+    {
+      from: 'nurul.cse7@gmail.com', // verified sender email
+      to: email || 'ph03b6@gmail.com', // recipient email
+      subject: `Your appointment for ${treatment} is confirmed`, // Subject line
+      text: 'Hello world!', // plain text body
+      html: `
         <h3>Your appointment is confirmed</h3>
         <div>
             <p>Your appointment for treatment: ${treatment}</p>
@@ -57,15 +57,15 @@ transporter.sendMail(
             <p>Thanks</p>
             <a href='https://dental-care-com.web.app'>Visit our website</a>
         </div> `, // html body
-  },
-  function (error, info) {
-    if (error) {
-      console.log('Email send error', error);
-    } else {
-      console.log('Email sent: ' + info);
+    },
+    function (error, info) {
+      if (error) {
+        console.log('Email send error', error);
+      } else {
+        console.log('Email sent: ' + info);
+      }
     }
-  }
-);
+  );
 }
 
 // JWT verification middleware 75-5
@@ -317,28 +317,9 @@ async function run() {
     });
     // =================Add A Doctor stop here ========================
 
+    
     // ================= Payment start here ========================
 
-    // // delete a booking from UI and mongo
-    // app.get('/bookings/:id', async (req, res) => {
-    //   const id = req.params.id;
-    //   const filter = { _id: ObjectId(id) };
-    //   const booking = await bookingsCollection.deleteOne(filter);
-    //   res.send(booking);
-    // });
-
-    // (temporary to update ) insert price field on appointmentOptions on mongo
-    // app.get('/addPrice', async (req, res) => {
-    //   const filter = {};
-    //   const options = { upsert: true };
-    //   const updatedDoc = {
-    //     $set: {
-    //       price: 99,
-    //     },
-    //   };
-    //   const result = await appointmentOptionCollection.updateMany( filter, updatedDoc, options);
-    //   res.send(result);
-    // });
     // get booking id from bookings/mongo for payment 77-
     app.get('/bookings/:id', async (req, res) => {
       const id = req.params.id;
